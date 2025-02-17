@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "417405396594",
+    "firebase_url": "https://astro-setu-232cc-default-rtdb.firebaseio.com",
+    "project_id": "astro-setu-232cc",
+    "storage_bucket": "astro-setu-232cc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417405396594:android:8589639eb1f48a1d0c04eb",
+        "android_client_info": {
+          "package_name": "com.astrologer.astrosetu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "417405396594-eel344pveuem833nhn25erqdudf70rou.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeg2CyQn3rr7QDUyy7qlhWiHyeE5H3ZDo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417405396594-eel344pveuem833nhn25erqdudf70rou.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417405396594:android:d46d8a7514ccbe000c04eb",
+        "android_client_info": {
+          "package_name": "com.astrosetu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "417405396594-eel344pveuem833nhn25erqdudf70rou.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeg2CyQn3rr7QDUyy7qlhWiHyeE5H3ZDo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417405396594-eel344pveuem833nhn25erqdudf70rou.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417405396594:android:01d8905b2f78c9fa0c04eb",
+        "android_client_info": {
+          "package_name": "com.example.astrosetu"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "417405396594-eel344pveuem833nhn25erqdudf70rou.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeg2CyQn3rr7QDUyy7qlhWiHyeE5H3ZDo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417405396594-eel344pveuem833nhn25erqdudf70rou.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
