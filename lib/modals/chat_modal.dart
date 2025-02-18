@@ -68,3 +68,61 @@ class InitiateCall {
 
 }
 
+
+
+class AcceptCall {
+  final String call_id;
+
+
+  // Constructor
+  AcceptCall({
+    required this.call_id,
+
+  });
+
+  // Convert JSON to Object (Factory Constructor)
+  factory AcceptCall.fromJson(Map<String, dynamic> json) {
+    return AcceptCall(
+      call_id: json['callId'],
+    );
+  }
+
+  // Convert Object to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'call_id': call_id,
+    };
+  }
+
+
+}
+
+class RegisterUser {
+  final String user_id;
+  final String user_type;
+
+  // Constructor
+  RegisterUser({
+    required this.user_id,
+    required this.user_type,
+  });
+
+  // Convert JSON to Object (Factory Constructor)
+  factory RegisterUser.fromJson(Map<String, dynamic> json) {
+    return RegisterUser(
+      user_id: json['user_id'],
+      user_type: json['user_type'],
+    );
+  }
+
+  // Convert Object to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': user_id,
+      'user_type': user_type,
+    };
+  }
+}
+
+
+

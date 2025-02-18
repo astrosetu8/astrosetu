@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../modals/all_astro_detail_modal.dart';
 import '../../provider/astrologer/astrologer_bloc.dart';
+import '../call/call_screen.dart';
 import 'detail_astrologer.dart';
 
 class AstrologersScreen extends StatefulWidget {
@@ -159,7 +160,7 @@ class _AstrologersScreenState extends State<AstrologersScreen> {
                           language: languageString,
                           expert: skillString,
                           name: astrologer.name,
-                          rating: astrologer.rating.toString(),
+                          rating: astrologer.rating.toString(), userId: astrologer.id.toString(), astrologerId: astrologer.id.toString(),
                         ),
                       );
                     },
@@ -229,6 +230,8 @@ class _AstrologersScreenState extends State<AstrologersScreen> {
       {required String image,
       required String name,
       required String rating,
+        required String userId,
+        required String astrologerId,
       required String expert,
       required String amt,
       required bool call,
@@ -361,11 +364,10 @@ class _AstrologersScreenState extends State<AstrologersScreen> {
                     if (chat == true)
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
+                          Navigator.push(context,
                             MaterialPageRoute(
-                              builder: (_) => ChatScreen(
-                                name: name,
+                              builder: (_) => CallScreen(callerImage: image, callType: "chat",
+                                callerName: name, phone: '', userId: userId, astrologerId: astrologerId,
                               ),
                             ),
                           );

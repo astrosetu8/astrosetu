@@ -2,6 +2,7 @@ import 'package:astrosetu/component/mytext.dart';
 import 'package:astrosetu/provider/dashboard/dashboard_bloc.dart';
 import 'package:astrosetu/utils/utils.dart';
 import 'package:astrosetu/view/Astrologer/all_astrologer.dart';
+import 'package:astrosetu/view/call/call_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -141,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(
               height: 10,
             ),
-            _chatBuildWidget(dashboard.onlineAstrologers),
+            _chatBuildWidget(astrologers:   dashboard.onlineAstrologers,userProfile: dashboard.userProfile),
             const SizedBox(
               height: 10,
             ),
@@ -311,7 +312,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _chatBuildWidget(List<Astrologer> astrologers) {
+  Widget _chatBuildWidget(
+      {
+    required List<Astrologer> astrologers,
+    required UserProfile userProfile,
+  }) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -344,7 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
           .take(2) // Take only the first 2 languages
           .map((skill) => skill.name)
           .join(', ');
-        return _buildAstrologerCard(image: "${ImagePath.imageBaseUrl}${astrologer.profileImg}", name: astrologer.name, rating: astrologer.rating.toString(), expert: skillString, amt: astrologer.perMinChat.toString(), call: false, chat: true, video: false, language: languageString);
+        return _buildAstrologerCard(image: "${ImagePath.imageBaseUrl}${astrologer.profileImg}", name: astrologer.name, rating: astrologer.rating.toString(), expert: skillString, amt: astrologer.perMinChat.toString(), call: false, chat: true, video: false, language: languageString, userId: userProfile.id.toString(), astrologerId: astrologer.id.toString()
+        );
       },
     );
   }
@@ -557,6 +563,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAstrologerCard(
       {required String image,
         required String name,
+        required String userId,
+        required String astrologerId,
         required dynamic rating,
         required String expert,
         required String amt,
@@ -690,8 +698,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () {
                           Navigator.push(context,
                             MaterialPageRoute(
-                              builder: (_) => ChatScreen(
-                                name: name,
+                              builder: (_) => CallScreen(callerImage: image, callType: "chat",
+                                callerName: name, phone: '', userId: userId, astrologerId: astrologerId,
                               ),
                             ),
                           );

@@ -38,14 +38,14 @@ print("isFirstTime  $isFirstTime");
         (!isFirstTime)
        ? Navigator.pushReplacementNamed(context, RoutePath.onboard)
             :
-        Navigator.push(context,
-          MaterialPageRoute(
-            builder: (_) => CallScreen(
-              callerName: "sumit",
-            ),
-          ),
-        );
-        // Navigator.pushReplacementNamed(context, RoutePath.login);
+        // Navigator.push(context,
+        //   MaterialPageRoute(
+        //     builder: (_) => CallScreen(
+        //       callerName: "sumit",
+        //     ),
+        //   ),
+        // );
+        Navigator.pushReplacementNamed(context, RoutePath.login);
       }
     });
   }
