@@ -1,8 +1,10 @@
+import 'package:astrosetu/component/mytext.dart';
 import 'package:astrosetu/modals/astro_profile.dart';
 import 'package:astrosetu/provider/profile/profile_bloc.dart';
 import 'package:astrosetu/utils/image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../provider/astro_profile/astro_profile_bloc.dart';
 import '../../provider/astrologer/astrologer_bloc.dart';
@@ -19,6 +21,7 @@ class AstrologerProfileScreen extends StatefulWidget {
 
 class _AstrologerProfileScreenState extends State<AstrologerProfileScreen> {
   late AstroProfileModal astrologerData;
+  bool isExpanded = false;
 
   @override
   void initState() {
@@ -101,7 +104,7 @@ class _AstrologerProfileScreenState extends State<AstrologerProfileScreen> {
                       const SizedBox(height: 20),
                       _buildPricingTabs(data.data),
                       const SizedBox(height: 20),
-                      //_buildCustomerReviews(data.data.totalReviews),
+                      _buildCustomerReviews(data.latestReviews),
                     ],
                   ),
                 ),
@@ -139,6 +142,7 @@ class _AstrologerProfileScreenState extends State<AstrologerProfileScreen> {
                   ),
                   const SizedBox(width: 8),
                   const Icon(Icons.verified, color: Colors.blue, size: 20),
+                  Expanded(child: Icon(Icons.share))
                 ],
               ),
               Text(
@@ -161,14 +165,45 @@ class _AstrologerProfileScreenState extends State<AstrologerProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "About",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          MyText(
+          label: "About",
+          fontSize: 16, fontWeight: FontWeight.bold,
         ),
         const SizedBox(height: 10),
-        Text(
-          about,
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MyText(
+                  label: about,
+                  fontSize: 14.sp,
+                  fontColor: Colors.black87,
+                  maxLines: isExpanded ? null : 3, // Show only 3 lines initially
+                  overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                ),
+                if (about.length > 100) // Show "See More" only if text is long
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isExpanded = !isExpanded;
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Text(
+                        isExpanded ? "See Less" : "See More",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -179,24 +214,26 @@ class _AstrologerProfileScreenState extends State<AstrologerProfileScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildTab("₹${data.perMinChat}/min\nChat"),
-        _buildTab("₹${data.perMinVoiceCall}/min\nCall"),
-        _buildTab("₹${data.perMinVideoCall}/min\nVideo"),
+        _buildTab(label: "₹${data.perMinChat}/min\nChat",isActive: data.isChatOnline.toString()),
+        _buildTab(label: "₹${data.perMinVoiceCall}/min\nCall",isActive: data.isVoiceOnline.toString()),
+        _buildTab(label: "₹${data.perMinVideoCall}/min\nVideo",isActive: data.isVideoOnline.toString()),
       ],
     );
   }
 
-  Widget _buildTab(String label) {
+  Widget _buildTab({required String label, required String isActive}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding:   EdgeInsets.symmetric(horizontal: 20.w, vertical: 10),
+      margin:   EdgeInsets.only(right:  12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.blue),
+          color: isActive != "on" ? Colors.grey.shade300 : Color(0xff5cbd5c),
+        //border: Border.all(color: isActive != "on" ? Colors.blue : Colors.green),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      child: MyText(
+       label:  label,
+       alignment: true,
+      fontSize: 13, fontWeight: FontWeight.w500,
       ),
     );
   }

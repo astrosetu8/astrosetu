@@ -1,11 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:logger/logger.dart';
-import 'package:socket_io_client/socket_io_client.dart' as socket_io;
 import '../../component/mytext.dart';
-import '../../modals/chat_modal.dart';
 import '../../service/socket_service.dart';
 import '../../utils/image.dart';
 import '../chat_screen.dart';
@@ -33,77 +29,160 @@ class CallScreen extends StatefulWidget {
 
 class _CallScreenState extends State<CallScreen> {
   final SocketService _socketService = SocketService();
+  bool _isCallAccepted = false;
+  String? astrologerId;
 
   @override
   void initState() {
     super.initState();
-    print("user id >>>${widget.userId}");
-    _socketService.connect(userId: widget.userId, userType: 'user');
-    sendInitiateCall();
+    Logger().i("User ID: ${widget.userId}");
+    _handleSocketConnection();
   }
 
-  void _acceptCall() {
-    _socketService.sendInitiateCall;
-    Logger().i("Call Accepted");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(name: widget.callerName,
+  Future<void> _handleSocketConnection() async {
+    bool isConnected = await _socketService.connectWithRegister(
+        userId: widget.userId, userType: 'user');
+print("_handleSocketConnection $isConnected");
+    if (isConnected) {
+      _sendInitiateCall();
+    } else {
+      isReconnect();
+      Logger().e("Socket connection failed. Cannot initiate call.");
+    }
+  }
 
-        //    callId: widget.callId
-        ),
-      ),
+  Future<void> isReconnect() async {
+    bool isConnected = await _socketService.connect();
+    if (isConnected) {
+      _sendInitiateCall();
+    } else {
+      Logger().e("🔁 Reconnection failed.");
+    }
+  }
+
+
+  void _listenForCallConnected() {
+    _socketService.listenForCallConnected((isConnected) {
+      if (isConnected) {
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              name: widget.callerName,
+              userId: widget.userId,
+              astrologerId: widget.astrologerId,
+              callId: "",
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  void _sendInitiateCall() {
+    if (_isCallAccepted) {
+      Logger().w("Call already initiated, waiting for connection...");
+      return; // Prevent re-initiating a call if one is ongoing
+    }
+
+    _socketService.sendInitiateCall(
+      userId: widget.userId,
+      astrologerId: widget.astrologerId,
+      callType: 'chat',
     );
+
+    _serviceFunc();
+    _listenForCallConnected();
   }
 
-  void sendInitiateCall() {
-    _socketService.sendInitiateCall(userId: widget.userId, astrologerId: widget.astrologerId, callType: 'chat');
+  void _serviceFunc() async {
+    astrologerId = widget.astrologerId;
+    if (astrologerId != null) {
+      _socketService.connectWithRegister(
+        userId: astrologerId.toString(),
+        userType: 'astrologer',
+      );
+    }
 
-    // _sendMessage(_controller.text);
-    // _controller.clear();
+    /// Listen for call rejection
+    _socketService.listenForCallReject((bool isRejected, String? message) {
+      print(">>>>>>>>>>>>>>> $isRejected");
+
+      if (isRejected && mounted) {  // Ensure widget is still mounted
+        Navigator.pop(context); // Go back to the previous screen
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message ?? "Call was rejected."),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        _socketService.disconnect();
+      }
+    });
+
+    /// Listen for call rejection
+    _socketService.listenForCallError((bool isRejected, String? message) {
+      print(">>>>>>>>>>>>>>> $isRejected");
+
+      if (isRejected && mounted) {  // Ensure widget is still mounted
+        Navigator.pop(context); // Go back to the previous screen
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message ?? "Call was rejected."),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        _socketService.disconnect();
+      }
+    });
+
   }
 
   void _endCall() {
     _socketService.sendEndCall(callId: widget.userId);
+    _socketService.disconnect();
     Logger().i("Call Ended");
     Navigator.pop(context);
   }
 
-  @override
-  void dispose() {
-    _socketService.disconnect();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _socketService.disconnect();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-
-      // App Bar with caller's name
       appBar: AppBar(
-        title: MyText(label: widget.callerName, fontColor: Colors.white, fontSize: 20.sp),
+        title: MyText(
+            label: widget.callerName, fontColor: Colors.white, fontSize: 20.sp),
         backgroundColor: Colors.black54,
       ),
-
       body: Column(
         children: [
           Expanded(
-            flex: 3, // Main content takes most space
+            flex: 3,
             child: Center(
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Centers content properly
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Caller Image from assets
                   CircleAvatar(
                     radius: 80,
-                    backgroundImage: NetworkImage("${ImagePath.imageBaseUrl}${widget.callerImage}"),
+                    backgroundImage: NetworkImage(
+                        "${ImagePath.imageBaseUrl}${widget.callerImage}"),
                   ),
                   SizedBox(height: 20),
-
-                  // Calling status text
                   MyText(
-                    label: "Calling...",
+                    label: _isCallAccepted ? "Connected" : "Calling...",
                     fontColor: Colors.white,
                     fontSize: 18.sp,
                   ),
@@ -111,25 +190,12 @@ class _CallScreenState extends State<CallScreen> {
               ),
             ),
           ),
-
-          // Bottom buttons section
           Padding(
             padding: EdgeInsets.only(bottom: 50.h),
-            child: GestureDetector(
-              onVerticalDragUpdate: (details) {
-                if (details.primaryDelta! < 0) {
-                  // Swipe Up: Accept Call
-                  _acceptCall();
-                } else if (details.primaryDelta! > 0) {
-                  // Swipe Down: End Call
-                  _endCall();
-                }
-              },
-              child: _buildCallButton(
-                Icons.call,
-                Colors.red,
-                    () {},
-              ),
+            child: _buildCallButton(
+              Icons.call_end,
+              Colors.red,
+              _endCall,
             ),
           ),
         ],
@@ -137,7 +203,6 @@ class _CallScreenState extends State<CallScreen> {
     );
   }
 
-  // Custom function for call action buttons
   Widget _buildCallButton(IconData icon, Color color, VoidCallback onPressed) {
     return CircleAvatar(
       radius: 30,

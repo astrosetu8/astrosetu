@@ -1,281 +1,248 @@
-import 'package:astrosetu/utils/image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:logger/logger.dart';
-import 'dart:async';
-import 'package:socket_io_client/socket_io_client.dart' as socket_io;
-
-import '../modals/chat_modal.dart';
-import 'chat_screen.dart';
+import '../component/mytext.dart';
+import '../service/socket_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final String name;
+  final String userId;
+  final String astrologerId;
+  final String callId;
 
-  ChatScreen({required this.name});
+  ChatScreen({required this.name, required this.userId, required this.astrologerId,required this.callId,});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  List<Map<String, dynamic>> messages = [];
+  List<Map<String, dynamic>> messages = [];  // Store messages
+
   TextEditingController _controller = TextEditingController();
-  List<Chat> chat = [];
-  List<InitiateCall> initiateCall = [];
-  bool isChatAvailable = false;
-  bool showOverlay = true;
-  int countdown = 120; // 2 minutes countdown
-  Timer? _timer;
-
-  // void _sendMessage(String text) {
-  //   if (text.trim().isEmpty) return;
-  //   setState(() {
-  //     messages.add({"text": text, "isMe": true});
-  //     messages.add({"text": "Reply to: $text", "isMe": false});
-  //   });
-  //   _controller.clear();
-  // }
-  void showdilogbox(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Message Sent"),
-        content: Text("Your message has been sent successfully!"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("OK"),
-          )
-        ],
-      ),
-    );
-  }
+  final SocketService _socketService = SocketService(); // Using SocketService
 
 
-  void sendChat() {
-    if(_controller.text.toString().isNotEmpty){
-      final chat = Chat(content: _controller.text, time: DateTime.now());
-      socket?.emit("initiate_call", chat.toJson());
-      _sendMessage(_controller.text);
-      _controller.clear();
-    }
-  }
-
-  void sendInitiateCall() {
-    final initiateCall = InitiateCall( user_id: 'sumit ka id', astrologer_id: '7hggfhgfhgfhg777mnbvhgf', call_type: 'call');
-    socket?.emit("initiate_call", initiateCall.toJson());
-    // _sendMessage(_controller.text);
-    // _controller.clear();
-  }
-
-  void _startChatRequest() {
-    setState(() {
-      messages.add({"text": "Wait for response...", "isMe": true});
-    });
-
-    Future.delayed(Duration(seconds: 3), () {
-      setState(() {
-        isChatAvailable = true;
-        messages.add({"text": "You are available to chat with ${widget.name}", "isMe": false});
-
-      });
-    });
-  }
-
-  void _startCountdown() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (countdown > 0) {
-        setState(() {
-          countdown--;
-        });
-      } else {
-        _timer?.cancel();
-        setState(() {
-          showOverlay = false;
-        });
-      }
-    });
-  }
-socket_io.Socket? socket;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startChatRequest();
-       _startCountdown();
-      sendInitiateCall();
-      _showWelcomeDialog();
 
-    });
-    socket = socket_io.io(
-      "http://192.168.1.9:5001",
-      socket_io.OptionBuilder().setTransports(["websocket"]).enableAutoConnect().build(),
-    );
-    socket?.connect();
-    setupListeners();
+    // Connect to socket
+    _socketService.connect().then((isConnected) {
+      if (isConnected) {
+        _socketService.listenForMessages((data) {
+          if (mounted) {
+            setState(() {
+              messages.add({"text": data["message"], "isMe": false});
+            });
+          }
+        });
 
-  }
-
-  void setupListeners() {
-    socket?.on("connect", (_) => Logger().i("Connected to server"));
-    socket?.on("disconnect", (_) => Logger().i("Disconnected from server"));
-
-    // Listen for incoming messages
-    socket?.on("chat message", (data) {
-      Logger().i("New message received: $data");
-      setState(() {
-        messages.add({"text": data, "isMe": false});
-      });
+        // 📡 Listen for call rejection
+        _socketService.listenForCallEnded((callEnded) {
+          if (callEnded) {
+            if (mounted) {
+              print("data for read $callEnded");
+              _showCallEndedDialog();
+            }
+          }
+        });
+      } else {
+        Logger().e("❌ Could not connect to the socket.");
+      }
     });
   }
 
-
-  void _showWelcomeDialog() {
-    int _timerSeconds = countdown; // Timer duration in seconds
-    late Timer _timer; // Timer variable
-
+  /// Show dialog when the call ends
+  void _showCallEndedDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevents dismissing by tapping outside
+      barrierDismissible: false, // Prevent dismissing by tapping outside
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            // Start the timer when the dialog is displayed
-            _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-              if (_timerSeconds > 0) {
-                setState(() {
-                  _timerSeconds--;
-                });
-              } else {
-                _timer.cancel(); // Stop the timer when it reaches 0
-              }
-            });
-
-            return AlertDialog(
-              backgroundColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Display an image
-                  Image.asset(
-                    ImagePath.facebook, // Change this to your image asset path
-                    height: 100,
-                    width: 100,
-                  ),
-                  SizedBox(height: 10),
-
-                  // Timer countdown
-                  Text(
-                    "Time remaining: $_timerSeconds seconds",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-
-                  // Display the user's name
-                  Text(
-                    "Hello ${widget.name}, welcome to the chat!",
-                    style: TextStyle(fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 20),
-
-                  // End button
-                  TextButton(
-                    onPressed: () {
-                      _timer.cancel(); // Cancel the timer when the button is pressed
-                      Navigator.pop(context);
-                    },
-                    child: Text("End", style: TextStyle(fontSize: 16,color: Colors.red)),
-                  ),
-                ],
-              ),
-            );
-          },
+        return AlertDialog(
+          title: Text("Call Ended"),
+          content: Text("The other side has ended the call."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Navigate back to the previous screen
+              },
+              child: Text("OK"),
+            ),
+          ],
         );
       },
     );
   }
 
-  @override
-  void dispose() {
-    socket?.close();
-    _timer?.cancel();
-    super.dispose();
-  }
-  void _sendMessage(String initiate_call) {
-    if (initiate_call.trim().isEmpty) return;
 
-    setState(() {
-      messages.add({"text": initiate_call, "isMe": true});
-    });
+  void sendChat() {
+    if (_controller.text.trim().isNotEmpty) {
+      String message = _controller.text.trim();
+      _socketService.sendMessage(
+        userId: widget.userId,
+        astrologerId: widget.astrologerId,
+        message: message,
+      );
 
-    _controller.clear();
+      setState(() {
+        messages.add({"text": message, "isMe": true});
+      });
+
+      _controller.clear();
+    }
   }
+
+
+  void _endCall() {
+    _socketService.sendEndCall(callId: widget.callId);
+    _socketService.disconnect();
+    Logger().i("Reject Ended");
+    //Navigator.pop(context);
+  }
+  // @override
+  // void dispose() {
+  //   _socketService.disconnect();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
+      backgroundColor: Color(0xffFFF8F2),
       appBar: AppBar(
-        title: Text(widget.name),
+        backgroundColor: Color(0xffFFF8F2),
+        title: MyText( label: widget.name,fontWeight: FontWeight.w500,fontSize: 16.sp,),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.white,
+              child: IconButton(color: Colors.white,
+                  onPressed: (){
+                    _endCall();
+
+                  }, icon:   Icon(Icons.exit_to_app_outlined,color: Colors.black,)),
+            ),
+          )
+
+        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message = messages[index];
-                return Align(
-                  alignment: message["isMe"] ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    padding: EdgeInsets.all(10),
-                    margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: message["isMe"] ? Colors.blue : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      message["text"],
-                      style: TextStyle(color: message["isMe"] ? Colors.white : Colors.black),
+              child:
+              StreamBuilder<Map<String, dynamic>>(
+                stream: _socketService.messageStream,  // Listen to message stream
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    messages.add({
+                      "text": snapshot.data!["message"],
+                      "isMe": false,  // Assuming this is a received message
+                    });
+                  }
+
+                  return ListView.builder(
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+                      return Align(
+                        alignment: message["isMe"] ? Alignment.centerRight : Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.7, // Max 70% of screen width
+                          ),
+                          child: IntrinsicWidth( // Ensures width adjusts based on content
+                            child: Container(
+                              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: message["isMe"] ? Colors.grey[300] : Colors.white,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                  bottomLeft: message["isMe"] ? Radius.circular(20) : Radius.circular(0),
+                                  bottomRight: message["isMe"] ? Radius.circular(0) : Radius.circular(20),
+                                ),
+                                // boxShadow: [
+                                //   BoxShadow(
+                                //     color: Colors.black12,
+                                //     blurRadius: 2,
+                                //     offset: Offset(0, 2),
+                                //   ),
+                                // ],
+                              ),
+                              child: Row(
+                                //  crossAxisSize: CrossAxisSize.min, // Shrinks to fit content
+                                crossAxisAlignment: CrossAxisAlignment.end, // Align text properly
+                                children: [
+                                  Expanded(
+                                    child: MyText(
+                                      label: message["text"],
+                                      fontColor: Colors.black,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4), // Space between text and timestamp
+                                  Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: Text(
+                                      _formatTime(DateTime.now()), // Function to format time
+                                      style: TextStyle(
+                                        fontSize: 10.sp,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ),
+
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+
+
+
+
+                      ;
+                    },
+                  );
+                },
+              )
+
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: "Type a message...",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
                     ),
                   ),
-                );
-              },
+                ),
+                IconButton(
+                  icon: Icon(Icons.send, color: Colors.blue),
+                  onPressed: sendChat,
+                ),
+              ],
             ),
           ),
-          if (isChatAvailable)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        hintText: "Type a message...",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.send, color: Colors.blue),
-                    onPressed: () => sendChat()
-
-                        //_sendMessage(_controller.text),
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
   }
 
+  String _formatTime(DateTime time) {
+    return "${time.hour}:${time.minute.toString().padLeft(2, '0')}"; // HH:mm format
+  }
+
 }
-
-

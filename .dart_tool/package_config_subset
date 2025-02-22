@@ -418,6 +418,14 @@ web
 3.4
 file:///Users/ds/.pub-cache/hosted/pub.dev/web-1.1.0/
 file:///Users/ds/.pub-cache/hosted/pub.dev/web-1.1.0/lib/
+web_socket
+3.3
+file:///Users/ds/.pub-cache/hosted/pub.dev/web_socket-0.1.6/
+file:///Users/ds/.pub-cache/hosted/pub.dev/web_socket-0.1.6/lib/
+web_socket_channel
+3.3
+file:///Users/ds/.pub-cache/hosted/pub.dev/web_socket_channel-3.0.2/
+file:///Users/ds/.pub-cache/hosted/pub.dev/web_socket_channel-3.0.2/lib/
 xdg_directories
 3.3
 file:///Users/ds/.pub-cache/hosted/pub.dev/xdg_directories-1.1.0/

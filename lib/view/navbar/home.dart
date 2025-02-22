@@ -12,6 +12,7 @@ import '../../config/share_pref.dart';
 import '../../modals/dashboard_modal.dart';
 import '../../route/pageroute.dart';
 import '../../utils/image.dart';
+import '../Astrologer/detail_astrologer.dart';
 import '../chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -312,8 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _chatBuildWidget(
-      {
+  Widget _chatBuildWidget({
     required List<Astrologer> astrologers,
     required UserProfile userProfile,
   }) {
@@ -349,7 +349,19 @@ class _HomeScreenState extends State<HomeScreen> {
           .take(2) // Take only the first 2 languages
           .map((skill) => skill.name)
           .join(', ');
-        return _buildAstrologerCard(image: "${ImagePath.imageBaseUrl}${astrologer.profileImg}", name: astrologer.name, rating: astrologer.rating.toString(), expert: skillString, amt: astrologer.perMinChat.toString(), call: false, chat: true, video: false, language: languageString, userId: userProfile.id.toString(), astrologerId: astrologer.id.toString()
+        return GestureDetector(
+          onTap: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AstrologerProfileScreen(
+                  id: astrologer.id.toString(),
+                ),
+              ),
+            );
+          },
+          child: _buildAstrologerCard(image: "${ImagePath.imageBaseUrl}${astrologer.profileImg}", name: astrologer.name, rating: astrologer.rating.toString(), expert: skillString, amt: astrologer.perMinChat.toString(), call: false, chat: true, video: false, language: languageString, userId: userProfile.id.toString(), astrologerId: astrologer.id.toString()
+          ),
         );
       },
     );

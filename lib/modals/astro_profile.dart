@@ -1,14 +1,14 @@
-
-
 class AstroProfileModal {
   final bool success;
   final String message;
   final AstrologerData data;
+  final List<Review> latestReviews;
 
   AstroProfileModal({
     required this.success,
     required this.message,
     required this.data,
+    required this.latestReviews,
   });
 
   factory AstroProfileModal.fromJson(Map<String, dynamic> json) {
@@ -16,6 +16,9 @@ class AstroProfileModal {
       success: json['success'],
       message: json['message'],
       data: AstrologerData.fromJson(json['data']['astrologer']),
+      latestReviews: (json['data']['latestReviews'] as List)
+          .map((e) => Review.fromJson(e))
+          .toList(),
     );
   }
 }
@@ -120,7 +123,9 @@ class AstrologerData {
       dob: DateTime.parse(json['dob']),
       gender: json['gender'],
       address: json['address'],
-      languages: (json['languages'] as List).map((e) => Language.fromJson(e)).toList(),
+      languages: (json['languages'] as List)
+          .map((e) => Language.fromJson(e))
+          .toList(),
       skills: (json['skills'] as List).map((e) => Skill.fromJson(e)).toList(),
       state: json['state'],
       city: json['city'],
@@ -153,6 +158,58 @@ class AstrologerData {
       callCounts: json['call_counts'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
+    );
+  }
+}
+
+class Review {
+  final String id;
+  final User user;
+  final String astrologerId;
+  final double rating;
+  final String review;
+  final DateTime timestamp;
+
+  Review({
+    required this.id,
+    required this.user,
+    required this.astrologerId,
+    required this.rating,
+    required this.review,
+    required this.timestamp,
+  });
+
+  factory Review.fromJson(Map<String, dynamic> json) {
+    return Review(
+      id: json['_id'],
+      user: User.fromJson(json['user_id']),
+      astrologerId: json['astrologer_id'],
+      rating: (json['rating'] as num).toDouble(),
+      review: json['review'],
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
+}
+
+class User {
+  final String id;
+  final String name;
+  final String email;
+  final String profileImg;
+
+  User({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.profileImg,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['_id'],
+      name: json['name'],
+      email: json['email'],
+      profileImg: json['profile_img'] ?? "",
     );
   }
 }
